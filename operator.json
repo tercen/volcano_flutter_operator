@@ -1,0 +1,16 @@
+{
+  "name": "Volcano Plot",
+  "description": "Interactive volcano plot visualization for differential expression analysis.",
+  "tags": [
+    "data visualisation",
+    "plot",
+    "volcano",
+    "differential expression"
+  ],
+  "authors": [
+    "tercen"
+  ],
+  "urls": [
+    "https://github.com/tercen/volcano_flutter"
+  ]
+}

@@ -1,0 +1,40 @@
+name: volcano_flutter
+description: "Volcano Plot visualization app for Tercen platform"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  provider: ^6.1.2
+
+  # Dependency injection
+  get_it: ^8.0.3
+
+  # Charts
+  fl_chart: ^0.69.2
+
+  # Icons
+  font_awesome_flutter: ^10.8.0
+
+  # PDF/PNG export
+  pdf: ^3.11.2
+  printing: ^5.13.4
+
+  # CSV parsing
+  csv: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/
