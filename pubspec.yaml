@@ -24,10 +24,17 @@ dependencies:
 
   # PDF/PNG export
   pdf: ^3.11.2
-  printing: ^5.13.4
+  printing: ^5.13.1
 
   # CSV parsing
   csv: ^6.0.0
+
+  # Tercen client library for API integration (v1.7.0)
+  sci_tercen_client:
+    git:
+      url: https://github.com/tercen/sci_tercen_client.git
+      ref: 1.7.0
+      path: sci_tercen_client
 
 dev_dependencies:
   flutter_test:

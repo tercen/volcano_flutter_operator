@@ -31,6 +31,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+!/build/web/     # Tercen requirement - web build must be committed
 /coverage/
 
 # Symbolication related

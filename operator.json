@@ -1,6 +1,8 @@
 {
   "name": "Volcano Plot",
   "description": "Interactive volcano plot visualization for differential expression analysis.",
+  "isWebApp": true,
+  "serve": "build/web",
   "tags": [
     "data visualisation",
     "plot",
