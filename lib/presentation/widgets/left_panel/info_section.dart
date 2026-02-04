@@ -13,10 +13,8 @@ import '../common/section_header.dart';
 class InfoSection extends StatelessWidget {
   const InfoSection({super.key});
 
-  // Placeholder version - update when GitHub repo is created
-  static const String _version = '0.0.0';
-  // Placeholder URL - update when GitHub repo is created
-  static const String _repoUrl = 'https://www.google.com';
+  static const String _commitHash = '7ac145a';
+  static const String _repoUrl = 'https://github.com/tercen/volcano_flutter';
   static const String _volcanoserUrl = 'https://github.com/JoachimGoedhart/VolcaNoseR';
 
   void _openUrl(String url) {
@@ -47,20 +45,27 @@ class InfoSection extends StatelessWidget {
                 color: textColor,
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                'GitHub',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
               InkWell(
                 onTap: () => _openUrl(_repoUrl),
                 borderRadius: BorderRadius.circular(4),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   child: Text(
-                    _version,
+                    'volcano_flutter',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: linkColor,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              InkWell(
+                onTap: () => _openUrl('$_repoUrl/commit/$_commitHash'),
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Text(
+                    _commitHash,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: linkColor,
                     ),
