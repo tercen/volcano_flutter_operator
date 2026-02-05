@@ -158,35 +158,29 @@ class VolcanoDataResolver {
   Future<ResolvedVolcanoColumns?> _extractProjectionData(
       CubeQueryTask cubeTask) async {
     final query = cubeTask.query;
-    final rowHash = query.rowHash;
-    if (rowHash.isEmpty) {
-      print('VolcanoDataResolver: Query has no rowHash');
+
+    // Use qtHash for the actual data (contains .x, .y, .ci, labels)
+    // rowHash only contains row metadata, not the projection data
+    final qtHash = query.qtHash;
+    if (qtHash.isEmpty) {
+      print('VolcanoDataResolver: Query has no qtHash');
       return null;
     }
 
     try {
-      // Get row schema to find column names
-      print('VolcanoDataResolver: Fetching schema for rowHash: $rowHash');
-      final rowSchema = await _serviceFactory.tableSchemaService.get(rowHash);
+      // Get QT schema to find column names
+      print('VolcanoDataResolver: Fetching schema for qtHash: $qtHash');
+      final qtSchema = await _serviceFactory.tableSchemaService.get(qtHash);
 
-      print('VolcanoDataResolver: Row schema id: ${rowSchema.id}');
-      print('VolcanoDataResolver: Row schema nRows: ${rowSchema.nRows}');
-      print('VolcanoDataResolver: Row schema columns count: ${rowSchema.columns.length}');
+      print('VolcanoDataResolver: QT schema id: ${qtSchema.id}');
+      print('VolcanoDataResolver: QT schema nRows: ${qtSchema.nRows}');
+      print('VolcanoDataResolver: QT schema columns count: ${qtSchema.columns.length}');
 
-      // Debug: Print detailed column info
-      print('VolcanoDataResolver: Row schema type: ${rowSchema.runtimeType}');
-      for (var i = 0; i < rowSchema.columns.length; i++) {
-        final col = rowSchema.columns[i];
-        print('VolcanoDataResolver: Column[$i] type: ${col.runtimeType}');
-        print('VolcanoDataResolver: Column[$i] name: "${col.name}"');
-        print('VolcanoDataResolver: Column[$i] nRows: ${col.nRows}');
-        print('VolcanoDataResolver: Column[$i] colType: ${col.type}');
-      }
-
-      print('VolcanoDataResolver: Row schema columns: ${rowSchema.columns.map((c) => c.name).join(", ")}');
+      // Debug: Print column names
+      print('VolcanoDataResolver: QT schema columns: ${qtSchema.columns.map((c) => c.name).join(", ")}');
 
       // Check if schema has required columns
-      final columnNames = rowSchema.columns.map((c) => c.name).toSet();
+      final columnNames = qtSchema.columns.map((c) => c.name).toSet();
       final hasXColumn = columnNames.contains('.x');
       final hasYColumn = columnNames.contains('.y');
 
@@ -196,12 +190,24 @@ class VolcanoDataResolver {
         return null;
       }
 
-      // Find the label column (first non-dot-prefixed column)
+      // Find the label column (first non-dot-prefixed column, preferring "Name" columns)
       String? labelColumnName;
-      for (final col in rowSchema.columns) {
+      for (final col in qtSchema.columns) {
         if (!col.name.startsWith('.')) {
-          labelColumnName = col.name;
-          break;
+          final lowerName = col.name.toLowerCase();
+          if (lowerName.contains('name') || lowerName.contains('label') || lowerName.contains('gene')) {
+            labelColumnName = col.name;
+            break;
+          }
+        }
+      }
+      // Fallback to first non-dot column if no name column found
+      if (labelColumnName == null) {
+        for (final col in qtSchema.columns) {
+          if (!col.name.startsWith('.')) {
+            labelColumnName = col.name;
+            break;
+          }
         }
       }
 
@@ -214,15 +220,15 @@ class VolcanoDataResolver {
       }
 
       // Calculate appropriate limit based on nRows (max 10000 per request for safety)
-      final nRows = rowSchema.nRows;
+      final nRows = qtSchema.nRows;
       final limit = nRows > 0 && nRows < 10000 ? nRows : 10000;
       print('VolcanoDataResolver: Fetching with limit: $limit (schema nRows: $nRows)');
 
-      // Fetch row data
-      final rowData = await _serviceFactory.tableSchemaService
-          .select(rowHash, columnsToFetch, 0, limit);
+      // Fetch QT data
+      final qtData = await _serviceFactory.tableSchemaService
+          .select(qtHash, columnsToFetch, 0, limit);
 
-      print('VolcanoDataResolver: Fetched ${rowData.nRows} rows');
+      print('VolcanoDataResolver: Fetched ${qtData.nRows} rows');
 
       // Parse the results
       final xValues = <double>[];
@@ -230,7 +236,7 @@ class VolcanoDataResolver {
       final labels = <String>[];
       final ciValues = <int>[];
 
-      for (final col in rowData.columns) {
+      for (final col in qtData.columns) {
         final values = col.values;
         if (values == null) continue;
 
@@ -315,9 +321,11 @@ class VolcanoDataResolver {
       final columnSchema =
           await _serviceFactory.tableSchemaService.get(columnHash);
 
+      print('VolcanoDataResolver: Column schema nRows: ${columnSchema.nRows}');
       print('VolcanoDataResolver: Column schema columns: ${columnSchema.columns.map((c) => c.name).join(", ")}');
 
       // Find the group column (often named with a pattern like "*.group" or "contrast")
+      // In production data, the column table has NO .ci column - groups are indexed by row order
       String? groupColumnName;
       for (final col in columnSchema.columns) {
         if (!col.name.startsWith('.')) {
@@ -350,31 +358,25 @@ class VolcanoDataResolver {
 
       print('VolcanoDataResolver: Group column: $groupColumnName');
 
-      // Fetch column data
+      // Fetch column data - just the group name column (no .ci in production data)
+      // The row index in the column table corresponds to the .ci value in the qt table
       final columnData = await _serviceFactory.tableSchemaService
-          .select(columnHash, ['.ci', groupColumnName], 0, 1000);
+          .select(columnHash, [groupColumnName], 0, 1000);
 
-      Column? ciCol;
       Column? nameCol;
-
       for (final col in columnData.columns) {
-        if (col.name == '.ci') {
-          ciCol = col;
-        } else if (col.name == groupColumnName) {
+        if (col.name == groupColumnName) {
           nameCol = col;
+          break;
         }
       }
 
-      if (ciCol?.values != null && nameCol?.values != null) {
-        final ciValues = ciCol!.values!;
+      if (nameCol?.values != null) {
         final nameValues = nameCol!.values!;
-        final length =
-            ciValues.length < nameValues.length ? ciValues.length : nameValues.length;
-
-        for (var i = 0; i < length; i++) {
-          final ci = _toInt(ciValues[i]);
-          final name = nameValues[i]?.toString() ?? 'Group_$ci';
-          groupMap[ci] = name;
+        // Map row index to group name (row 0 = group 0, row 1 = group 1, etc.)
+        for (var i = 0; i < nameValues.length; i++) {
+          final name = nameValues[i]?.toString() ?? 'Group_$i';
+          groupMap[i] = name;
         }
       }
 

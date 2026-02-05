@@ -4,7 +4,11 @@ import '../../domain/models/gene_data_point.dart';
 import '../../domain/models/volcano_data.dart';
 import '../../domain/services/volcano_data_service.dart';
 
-/// Mock implementation of VolcanoDataService that loads data from CSV assets
+/// Mock implementation of VolcanoDataService that loads data from CSV assets.
+///
+/// Uses the same data model as Tercen production:
+/// - qt.csv: Main data with .ci, .x, .y, labels (like qtHash)
+/// - column.csv: Group names in row order (like columnHash)
 class MockVolcanoDataService implements VolcanoDataService {
   VolcanoData? _cachedData;
 
@@ -15,59 +19,85 @@ class MockVolcanoDataService implements VolcanoDataService {
     try {
       print('MockVolcanoDataService: Loading CSV files from assets...');
 
-      // Load CSV files from assets
-      final rowDataCsv = await rootBundle.loadString('assets/data/example_row_data.csv');
-      final columnDataCsv = await rootBundle.loadString('assets/data/example_column_data.csv');
+      // Load CSV files from assets (matching Tercen production model)
+      final qtCsv = await rootBundle.loadString('assets/data/Production/qt.csv');
+      final columnCsv = await rootBundle.loadString('assets/data/Production/column.csv');
 
-      print('MockVolcanoDataService: Row CSV length: ${rowDataCsv.length}');
-      print('MockVolcanoDataService: Column CSV length: ${columnDataCsv.length}');
+      print('MockVolcanoDataService: QT CSV length: ${qtCsv.length}');
+      print('MockVolcanoDataService: Column CSV length: ${columnCsv.length}');
 
       // Normalize line endings (handles \r\n, \r, or \n)
-      final normalizedRowCsv = rowDataCsv.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-      final normalizedColumnCsv = columnDataCsv.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+      final normalizedQtCsv = qtCsv.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+      final normalizedColumnCsv = columnCsv.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
 
       // Parse CSVs with explicit newline character
       const csvConverter = CsvToListConverter(eol: '\n');
-      final rowData = csvConverter.convert(normalizedRowCsv);
+      final qtData = csvConverter.convert(normalizedQtCsv);
       final columnData = csvConverter.convert(normalizedColumnCsv);
 
-      print('MockVolcanoDataService: Row data rows: ${rowData.length}');
+      print('MockVolcanoDataService: QT data rows: ${qtData.length}');
       print('MockVolcanoDataService: Column data rows: ${columnData.length}');
 
       // Build group mapping from column data
-      // Column data format: .ci, UKA_app.UKA.Sgroup_contrast
-      // Note: .ci in column data is 1-based, while in row data it's 0-based
+      // Column data has NO .ci column - groups are in row order (row index = group index)
+      // First row is header, subsequent rows are group names
       final groupMap = <int, String>{};
       for (var i = 1; i < columnData.length; i++) {
         final row = columnData[i];
-        final ci = int.parse(row[0].toString());
-        final groupName = row[1].toString();
-        groupMap[ci - 1] = groupName; // Convert to 0-based
+        // Row index (0-based after skipping header) = group index
+        final groupName = row[0].toString();
+        groupMap[i - 1] = groupName;
       }
 
-      // Get column indices from header
-      final headers = rowData[0].map((h) => h.toString()).toList();
-      print('MockVolcanoDataService: Headers: $headers');
+      print('MockVolcanoDataService: Group map: $groupMap');
+
+      // Get column indices from QT header
+      final headers = qtData[0].map((h) => h.toString()).toList();
+      print('MockVolcanoDataService: QT Headers: $headers');
 
       final ciIndex = headers.indexOf('.ci');
       final xIndex = headers.indexOf('.x');
       final yIndex = headers.indexOf('.y');
-      final nameIndex = headers.indexOf('UKA_app.UKA.Kinase Name');
+
+      // Find label column (prefer "Name" columns)
+      int nameIndex = -1;
+      for (var i = 0; i < headers.length; i++) {
+        final h = headers[i].toLowerCase();
+        if (!headers[i].startsWith('.') &&
+            (h.contains('name') || h.contains('label') || h.contains('gene'))) {
+          nameIndex = i;
+          break;
+        }
+      }
+      // Fallback to first non-dot column
+      if (nameIndex == -1) {
+        for (var i = 0; i < headers.length; i++) {
+          if (!headers[i].startsWith('.')) {
+            nameIndex = i;
+            break;
+          }
+        }
+      }
 
       print('MockVolcanoDataService: Column indices - ci: $ciIndex, x: $xIndex, y: $yIndex, name: $nameIndex');
+
+      if (ciIndex == -1 || xIndex == -1 || yIndex == -1) {
+        print('MockVolcanoDataService: Missing required columns');
+        return VolcanoData(points: [], groups: [], selectedGroup: '');
+      }
 
       // Parse data points
       final points = <GeneDataPoint>[];
       final groups = <String>{};
 
-      for (var i = 1; i < rowData.length; i++) {
-        final row = rowData[i];
+      for (var i = 1; i < qtData.length; i++) {
+        final row = qtData[i];
 
         final ci = int.parse(row[ciIndex].toString());
         final foldChange = double.parse(row[xIndex].toString());
         final significance = double.parse(row[yIndex].toString());
-        final name = row[nameIndex].toString();
-        final group = groupMap[ci] ?? 'Unknown';
+        final name = nameIndex >= 0 ? row[nameIndex].toString() : 'Gene_$i';
+        final group = groupMap[ci] ?? 'Group_$ci';
 
         groups.add(group);
 
