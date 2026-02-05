@@ -370,8 +370,13 @@ class VolcanoDataResolver {
 
       // Fetch column data - just the group name column (no .ci in production data)
       // The row index in the column table corresponds to the .ci value in the qt table
+      // Use nRows as limit to avoid "Bad limit" error from Tercen API
+      final columnNRows = columnSchema.nRows;
+      final columnLimit = columnNRows > 0 && columnNRows < 1000 ? columnNRows : 1000;
+      print('VolcanoDataResolver: Fetching column data with limit: $columnLimit');
+
       final columnData = await _serviceFactory.tableSchemaService
-          .select(columnHash, [groupColumnName], 0, 1000);
+          .select(columnHash, [groupColumnName], 0, columnLimit);
 
       print('VolcanoDataResolver: Column data fetched, nRows: ${columnData.nRows}');
       print('VolcanoDataResolver: Column data columns count: ${columnData.columns.length}');
