@@ -56,8 +56,15 @@ class TercenVolcanoDataService implements VolcanoDataService {
       print(stackTrace);
       print('TercenVolcanoDataService: Falling back to mock data');
 
-      _cachedData = await _mockService.loadData();
-      return _cachedData!;
+      try {
+        _cachedData = await _mockService.loadData();
+        return _cachedData!;
+      } catch (mockError) {
+        print('TercenVolcanoDataService: Mock data also failed: $mockError');
+        // Return empty data as last resort
+        _cachedData = VolcanoData(points: [], groups: [], selectedGroup: '');
+        return _cachedData!;
+      }
     }
   }
 

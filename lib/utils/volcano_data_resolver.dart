@@ -52,6 +52,7 @@ class VolcanoDataResolver {
       // Get the task object
       final task = await _serviceFactory.taskService.get(taskId);
       print('VolcanoDataResolver: Retrieved task: ${task.id}');
+      print('VolcanoDataResolver: Task type: ${task.runtimeType}');
 
       // Handle both RunWebAppTask and CubeQueryTask
       CubeQueryTask? cubeTask = await _getCubeQueryTask(task);
@@ -60,6 +61,19 @@ class VolcanoDataResolver {
         print('VolcanoDataResolver: Could not get CubeQueryTask');
         return null;
       }
+
+      // Debug: Print query details
+      final query = cubeTask.query;
+      print('VolcanoDataResolver: CubeQueryTask id: ${cubeTask.id}');
+      print('VolcanoDataResolver: CubeQueryTask state: ${cubeTask.state}');
+      print('VolcanoDataResolver: Query rowHash: ${query.rowHash}');
+      print('VolcanoDataResolver: Query columnHash: ${query.columnHash}');
+      print('VolcanoDataResolver: Query qtHash: ${query.qtHash}');
+
+      // Check if task has completed
+      final taskState = cubeTask.state;
+      print('VolcanoDataResolver: CubeQueryTask state object: $taskState');
+      print('VolcanoDataResolver: CubeQueryTask state type: ${taskState.runtimeType}');
 
       // Extract projection data from task
       final columns = await _extractProjectionData(cubeTask);
@@ -107,9 +121,15 @@ class VolcanoDataResolver {
 
   Future<CubeQueryTask?> _getCubeQueryTask(Task task) async {
     if (task is CubeQueryTask) {
+      print('VolcanoDataResolver: Task is already a CubeQueryTask');
       return task;
     }
     if (task is RunWebAppTask) {
+      print('VolcanoDataResolver: Task is RunWebAppTask');
+      print('VolcanoDataResolver: RunWebAppTask.cubeQueryTaskId: ${task.cubeQueryTaskId}');
+      print('VolcanoDataResolver: RunWebAppTask.state: ${task.state}');
+      print('VolcanoDataResolver: RunWebAppTask.projectId: ${task.projectId}');
+
       final cubeQueryTaskId = task.cubeQueryTaskId;
       if (cubeQueryTaskId.isEmpty) {
         print('VolcanoDataResolver: RunWebAppTask has empty cubeQueryTaskId');
@@ -118,6 +138,8 @@ class VolcanoDataResolver {
 
       final cubeTaskObj =
           await _serviceFactory.taskService.get(cubeQueryTaskId);
+
+      print('VolcanoDataResolver: Retrieved cubeTask type: ${cubeTaskObj.runtimeType}');
 
       if (cubeTaskObj is! CubeQueryTask) {
         print(
@@ -144,7 +166,24 @@ class VolcanoDataResolver {
 
     try {
       // Get row schema to find column names
+      print('VolcanoDataResolver: Fetching schema for rowHash: $rowHash');
       final rowSchema = await _serviceFactory.tableSchemaService.get(rowHash);
+
+      print('VolcanoDataResolver: Row schema id: ${rowSchema.id}');
+      print('VolcanoDataResolver: Row schema nRows: ${rowSchema.nRows}');
+      print('VolcanoDataResolver: Row schema columns count: ${rowSchema.columns.length}');
+      print('VolcanoDataResolver: Row schema columns: ${rowSchema.columns.map((c) => c.name).join(", ")}');
+
+      // Check if schema has required columns
+      final columnNames = rowSchema.columns.map((c) => c.name).toSet();
+      final hasXColumn = columnNames.contains('.x');
+      final hasYColumn = columnNames.contains('.y');
+
+      if (!hasXColumn || !hasYColumn) {
+        print('VolcanoDataResolver: Missing required columns. Has .x: $hasXColumn, Has .y: $hasYColumn');
+        print('VolcanoDataResolver: Available columns: $columnNames');
+        return null;
+      }
 
       // Find the label column (first non-dot-prefixed column)
       String? labelColumnName;
@@ -155,7 +194,6 @@ class VolcanoDataResolver {
         }
       }
 
-      print('VolcanoDataResolver: Row schema columns: ${rowSchema.columns.map((c) => c.name).join(", ")}');
       print('VolcanoDataResolver: Label column: $labelColumnName');
 
       // Build list of columns to fetch
@@ -164,9 +202,14 @@ class VolcanoDataResolver {
         columnsToFetch.add(labelColumnName);
       }
 
-      // Fetch row data (up to 50000 rows)
+      // Calculate appropriate limit based on nRows (max 10000 per request for safety)
+      final nRows = rowSchema.nRows;
+      final limit = nRows > 0 && nRows < 10000 ? nRows : 10000;
+      print('VolcanoDataResolver: Fetching with limit: $limit (schema nRows: $nRows)');
+
+      // Fetch row data
       final rowData = await _serviceFactory.tableSchemaService
-          .select(rowHash, columnsToFetch, 0, 50000);
+          .select(rowHash, columnsToFetch, 0, limit);
 
       print('VolcanoDataResolver: Fetched ${rowData.nRows} rows');
 
