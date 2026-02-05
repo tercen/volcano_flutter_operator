@@ -22,10 +22,14 @@ class MockVolcanoDataService implements VolcanoDataService {
       print('MockVolcanoDataService: Row CSV length: ${rowDataCsv.length}');
       print('MockVolcanoDataService: Column CSV length: ${columnDataCsv.length}');
 
-      // Parse CSVs
-      const csvConverter = CsvToListConverter();
-      final rowData = csvConverter.convert(rowDataCsv);
-      final columnData = csvConverter.convert(columnDataCsv);
+      // Normalize line endings (handles \r\n, \r, or \n)
+      final normalizedRowCsv = rowDataCsv.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+      final normalizedColumnCsv = columnDataCsv.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+      // Parse CSVs with explicit newline character
+      const csvConverter = CsvToListConverter(eol: '\n');
+      final rowData = csvConverter.convert(normalizedRowCsv);
+      final columnData = csvConverter.convert(normalizedColumnCsv);
 
       print('MockVolcanoDataService: Row data rows: ${rowData.length}');
       print('MockVolcanoDataService: Column data rows: ${columnData.length}');

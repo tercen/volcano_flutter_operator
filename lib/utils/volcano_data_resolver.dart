@@ -172,6 +172,17 @@ class VolcanoDataResolver {
       print('VolcanoDataResolver: Row schema id: ${rowSchema.id}');
       print('VolcanoDataResolver: Row schema nRows: ${rowSchema.nRows}');
       print('VolcanoDataResolver: Row schema columns count: ${rowSchema.columns.length}');
+
+      // Debug: Print detailed column info
+      print('VolcanoDataResolver: Row schema type: ${rowSchema.runtimeType}');
+      for (var i = 0; i < rowSchema.columns.length; i++) {
+        final col = rowSchema.columns[i];
+        print('VolcanoDataResolver: Column[$i] type: ${col.runtimeType}');
+        print('VolcanoDataResolver: Column[$i] name: "${col.name}"');
+        print('VolcanoDataResolver: Column[$i] nRows: ${col.nRows}');
+        print('VolcanoDataResolver: Column[$i] colType: ${col.type}');
+      }
+
       print('VolcanoDataResolver: Row schema columns: ${rowSchema.columns.map((c) => c.name).join(", ")}');
 
       // Check if schema has required columns
