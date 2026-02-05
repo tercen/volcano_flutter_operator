@@ -318,10 +318,20 @@ class VolcanoDataResolver {
       }
 
       // Get column schema
+      print('VolcanoDataResolver: Fetching column schema for columnHash: $columnHash');
       final columnSchema =
           await _serviceFactory.tableSchemaService.get(columnHash);
 
+      print('VolcanoDataResolver: Column schema id: ${columnSchema.id}');
       print('VolcanoDataResolver: Column schema nRows: ${columnSchema.nRows}');
+      print('VolcanoDataResolver: Column schema columns count: ${columnSchema.columns.length}');
+
+      // Debug each column
+      for (var i = 0; i < columnSchema.columns.length; i++) {
+        final col = columnSchema.columns[i];
+        print('VolcanoDataResolver: ColumnSchema[$i] name: "${col.name}" type: ${col.type}');
+      }
+
       print('VolcanoDataResolver: Column schema columns: ${columnSchema.columns.map((c) => c.name).join(", ")}');
 
       // Find the group column (often named with a pattern like "*.group" or "contrast")
@@ -363,8 +373,12 @@ class VolcanoDataResolver {
       final columnData = await _serviceFactory.tableSchemaService
           .select(columnHash, [groupColumnName], 0, 1000);
 
+      print('VolcanoDataResolver: Column data fetched, nRows: ${columnData.nRows}');
+      print('VolcanoDataResolver: Column data columns count: ${columnData.columns.length}');
+
       Column? nameCol;
       for (final col in columnData.columns) {
+        print('VolcanoDataResolver: Column data col name: "${col.name}"');
         if (col.name == groupColumnName) {
           nameCol = col;
           break;
@@ -373,14 +387,18 @@ class VolcanoDataResolver {
 
       if (nameCol?.values != null) {
         final nameValues = nameCol!.values!;
+        print('VolcanoDataResolver: Name column has ${nameValues.length} values');
         // Map row index to group name (row 0 = group 0, row 1 = group 1, etc.)
         for (var i = 0; i < nameValues.length; i++) {
           final name = nameValues[i]?.toString() ?? 'Group_$i';
+          print('VolcanoDataResolver: Group[$i] = "$name"');
           groupMap[i] = name;
         }
+      } else {
+        print('VolcanoDataResolver: nameCol is null or has no values');
       }
 
-      print('VolcanoDataResolver: Group map: $groupMap');
+      print('VolcanoDataResolver: Final group map: $groupMap');
     } catch (e) {
       print('VolcanoDataResolver: Error extracting group names: $e');
       for (final ci in uniqueIndices) {
