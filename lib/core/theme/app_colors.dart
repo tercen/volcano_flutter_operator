@@ -1,45 +1,59 @@
 import 'package:flutter/material.dart';
 
 /// Light theme colors following Tercen style guide
+/// Reference: visual-style-light.md
 class AppColors {
   AppColors._();
 
   // Brand colors - Tercen design tokens
-  static const Color primary = Color(0xFF1E40AF);  // primary-base
-  static const Color primarySurface = Color(0xFFDBEAFE);  // primary-surface
+  static const Color primary = Color(0xFF1E40AF);  // primary-base (blue-800)
+  static const Color primaryDarker = Color(0xFF1E3A8A);  // primary-darker (blue-900)
+  static const Color primaryLighter = Color(0xFF2563EB);  // primary-lighter (blue-700)
+  static const Color primarySurface = Color(0xFFDBEAFE);  // primary-surface (blue-50)
+  static const Color primaryBg = Color(0xFFEFF6FF);  // primary-bg (blue-50 lighter)
   static const Color accent = Color(0xFF1E40AF);
   static const Color link = Color(0xFF1E40AF);  // link-base (same as primary in light mode)
   static const Color textMuted = Color(0xFF6B7280);  // neutral-500
 
-  // Background colors
-  static const Color background = Color(0xFFFFFFFF);
-  static const Color surface = Color(0xFFF8F9FA);
-  static const Color panelBackground = Color(0xFFF1F3F4);
+  // Background colors (using neutral palette)
+  static const Color background = Color(0xFFFFFFFF);  // white
+  static const Color surface = Color(0xFFFFFFFF);  // white
+  static const Color surfaceElevated = Color(0xFFF9FAFB);  // neutral-50
+  static const Color panelBackground = Color(0xFFF9FAFB);  // neutral-50
 
-  // Text colors
-  static const Color textPrimary = Color(0xFF202124);
-  static const Color textSecondary = Color(0xFF5F6368);
-  static const Color textDisabled = Color(0xFF9AA0A6);
-  static const Color textOnPrimary = Color(0xFFFFFFFF);
+  // Text colors (using neutral palette)
+  static const Color textPrimary = Color(0xFF111827);  // neutral-900
+  static const Color textSecondary = Color(0xFF374151);  // neutral-700
+  static const Color textTertiary = Color(0xFF4B5563);  // neutral-600
+  static const Color textDisabled = Color(0xFF9CA3AF);  // neutral-400
+  static const Color textOnPrimary = Color(0xFFFFFFFF);  // white
 
-  // Border colors
-  static const Color border = Color(0xFFDADCE0);
-  static const Color divider = Color(0xFFE8EAED);
+  // Border colors (using neutral palette)
+  static const Color border = Color(0xFFD1D5DB);  // neutral-300
+  static const Color divider = Color(0xFFE5E7EB);  // neutral-200
 
   // Volcano plot colors
-  static const Color unchanged = Color(0xFF141A1F);
-  static const Color increased = Color(0xFF57C981);
-  static const Color decreased = Color(0xFF36A2E0);
+  static const Color unchanged = Color(0xFF6B7280);  // neutral-500
+  static const Color increased = Color(0xFF047857);  // green
+  static const Color decreased = Color(0xFF1E40AF);  // primary blue
 
   // Threshold line color
-  static const Color thresholdLine = Color(0xFF5F6368);
+  static const Color thresholdLine = Color(0xFF6B7280);  // neutral-500
 
   // Interactive states
-  static const Color hover = Color(0x0A000000);
-  static const Color focus = Color(0x1A1A73E8);
+  static const Color hover = Color(0x0A000000);  // 4% black
+  static const Color focus = Color(0x33DBEAFE);  // primarySurface with opacity
 
-  // Status colors
-  static const Color error = Color(0xFFD93025);
-  static const Color warning = Color(0xFFF9AB00);
-  static const Color success = Color(0xFF1E8E3E);
+  // Semantic colors (from Tercen style guide)
+  static const Color success = Color(0xFF047857);  // green
+  static const Color successLight = Color(0xFFD1FAE5);  // green-light
+
+  static const Color error = Color(0xFFB91C1C);  // red
+  static const Color errorLight = Color(0xFFFEE2E2);  // red-light
+
+  static const Color warning = Color(0xFFB45309);  // amber
+  static const Color warningLight = Color(0xFFFEF3C7);  // amber-light
+
+  static const Color info = Color(0xFF0E7490);  // teal
+  static const Color infoLight = Color(0xFFCFFAFE);  // teal-light
 }

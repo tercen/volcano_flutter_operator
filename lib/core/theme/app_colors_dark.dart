@@ -1,45 +1,61 @@
 import 'package:flutter/material.dart';
 
-/// Dark theme colors following Tercen style guide
+/// Dark theme colors following Tercen style guide v2.0
+/// Reference: Tercen-Dark-Theme.html - February 2026
+/// Primary changed from violet to teal for friendlier, more approachable feel
 class AppColorsDark {
   AppColorsDark._();
 
-  // Brand colors - Tercen design tokens (violet for dark mode)
-  static const Color primary = Color(0xFF6D28D9);  // primary-dark-base
-  static const Color primarySurface = Color(0x266D28D9);  // primary-dark-surface (15% opacity)
-  static const Color accent = Color(0xFF6D28D9);
-  static const Color link = Color(0xFF2DD4BF);  // link-dark-base (teal for better contrast)
-  static const Color textMuted = Color(0xFF9CA3AF);  // neutral-400
+  // Brand colors - Tercen design tokens (teal for dark mode)
+  static const Color primary = Color(0xFF14B8A6);  // primary-dark-base (teal-500)
+  static const Color primaryHover = Color(0xFF0D9488);  // primary-dark-hover (teal-600)
+  static const Color primarySurface = Color(0xFF153D47);  // primary-dark-surface (teal tinted surface)
+  static const Color primaryBg = Color(0xFF122E35);  // primary-dark-bg (teal tinted bg)
+  static const Color accent = Color(0xFF14B8A6);
+  static const Color link = Color(0xFF60A5FA);  // link-dark-base (blue-400, distinct from actions)
+  static const Color textMuted = Color(0xFF94A3B8);  // neutral-400 (slate-400)
 
-  // Background colors
-  static const Color background = Color(0xFF202124);
-  static const Color surface = Color(0xFF292A2D);
-  static const Color panelBackground = Color(0xFF35363A);
+  // Background colors (slate palette for depth and reduced eye strain)
+  static const Color background = Color(0xFF0F172A);  // slate-900
+  static const Color surface = Color(0xFF1E293B);  // slate-800
+  static const Color surfaceElevated = Color(0xFF334155);  // slate-700
+  static const Color panelBackground = Color(0xFF1E293B);  // slate-800
 
-  // Text colors
-  static const Color textPrimary = Color(0xFFE8EAED);
-  static const Color textSecondary = Color(0xFF9AA0A6);
-  static const Color textDisabled = Color(0xFF5F6368);
-  static const Color textOnPrimary = Color(0xFF202124);
+  // Text colors (slate palette)
+  static const Color textPrimary = Color(0xFFF8FAFC);  // slate-50
+  static const Color textSecondary = Color(0xFFCBD5E1);  // slate-300
+  static const Color textDisabled = Color(0xFF64748B);  // slate-500
+  static const Color textOnPrimary = Color(0xFFFFFFFF);  // white text on primary colors
 
-  // Border colors
-  static const Color border = Color(0xFF5F6368);
-  static const Color divider = Color(0xFF3C4043);
+  // Border colors (slate palette)
+  static const Color border = Color(0xFF334155);  // slate-700
+  static const Color divider = Color(0xFF475569);  // slate-600
 
-  // Volcano plot colors (same as light for visibility)
-  static const Color unchanged = Color(0xFF5F6368);
-  static const Color increased = Color(0xFF57C981);
-  static const Color decreased = Color(0xFF36A2E0);
+  // Volcano plot colors (optimized for dark mode visibility)
+  static const Color unchanged = Color(0xFF94A3B8);  // slate-400
+  static const Color increased = Color(0xFF10B981);  // green-500 (from spec)
+  static const Color decreased = Color(0xFF60A5FA);  // blue-400 (from spec)
 
   // Threshold line color
-  static const Color thresholdLine = Color(0xFF9AA0A6);
+  static const Color thresholdLine = Color(0xFF94A3B8);  // slate-400
 
   // Interactive states
   static const Color hover = Color(0x0AFFFFFF);
-  static const Color focus = Color(0x1A8AB4F8);
+  static const Color focus = Color(0x33122E35);  // primaryBg with opacity
 
-  // Status colors
-  static const Color error = Color(0xFFF28B82);
-  static const Color warning = Color(0xFFFDD663);
-  static const Color success = Color(0xFF81C995);
+  // Semantic colors (from Tercen Dark Theme v2.0)
+  static const Color success = Color(0xFF22C55E);  // green-500
+  static const Color successLight = Color(0xFF10B981);  // green-light for dark
+  static const Color successBg = Color(0xFF14532D);  // green-900
+
+  static const Color error = Color(0xFFEF4444);  // red-500
+  static const Color errorLight = Color(0xFFF87171);  // red-light for dark
+  static const Color errorBg = Color(0xFF450A0A);  // custom dark red
+
+  static const Color warning = Color(0xFFF59E0B);  // amber-500
+  static const Color warningLight = Color(0xFFFBBF24);  // amber-light for dark
+  static const Color warningBg = Color(0xFF451A03);  // amber-950
+
+  static const Color info = Color(0xFF06B6D4);  // cyan-500
+  static const Color infoBg = Color(0xFF083344);  // cyan-950
 }
