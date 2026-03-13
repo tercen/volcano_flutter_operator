@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/enums.dart';
 import '../../domain/models/plot_settings.dart';
 
@@ -7,6 +8,30 @@ class PlotSettingsProvider extends ChangeNotifier {
   PlotSettings _settings = const PlotSettings();
 
   PlotSettings get settings => _settings;
+
+  /// Load persisted color preferences from localStorage
+  Future<void> loadColorPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final inc = prefs.getInt('color_increased');
+    final dec = prefs.getInt('color_decreased');
+    final unc = prefs.getInt('color_unchanged');
+    if (inc != null || dec != null || unc != null) {
+      _settings = _settings.copyWith(
+        increasedColorValue: inc,
+        decreasedColorValue: dec,
+        unchangedColorValue: unc,
+      );
+      notifyListeners();
+    }
+  }
+
+  /// Save color preferences to localStorage
+  Future<void> _saveColorPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('color_increased', _settings.increasedColorValue);
+    await prefs.setInt('color_decreased', _settings.decreasedColorValue);
+    await prefs.setInt('color_unchanged', _settings.unchangedColorValue);
+  }
 
   // Threshold controls
   void setFoldChangeRange(double min, double max) {
@@ -93,6 +118,26 @@ class PlotSettingsProvider extends ChangeNotifier {
 
   void resetAppearance() {
     _settings = _settings.resetAppearance();
+    _saveColorPreferences();
+    notifyListeners();
+  }
+
+  // Color controls
+  void setIncreasedColor(int colorValue) {
+    _settings = _settings.copyWith(increasedColorValue: colorValue);
+    _saveColorPreferences();
+    notifyListeners();
+  }
+
+  void setDecreasedColor(int colorValue) {
+    _settings = _settings.copyWith(decreasedColorValue: colorValue);
+    _saveColorPreferences();
+    notifyListeners();
+  }
+
+  void setUnchangedColor(int colorValue) {
+    _settings = _settings.copyWith(unchangedColorValue: colorValue);
+    _saveColorPreferences();
     notifyListeners();
   }
 
@@ -163,6 +208,9 @@ class PlotSettingsProvider extends ChangeNotifier {
       showGridlines: _settings.showGridlines,
       showLabels: _settings.showLabels,
       showLegend: _settings.showLegend,
+      increasedColorValue: _settings.increasedColorValue,
+      decreasedColorValue: _settings.decreasedColorValue,
+      unchangedColorValue: _settings.unchangedColorValue,
       xMin: _settings.xMin,
       xMax: _settings.xMax,
       yMin: _settings.yMin,
@@ -199,6 +247,9 @@ class PlotSettingsProvider extends ChangeNotifier {
       showGridlines: _settings.showGridlines,
       showLabels: _settings.showLabels,
       showLegend: _settings.showLegend,
+      increasedColorValue: _settings.increasedColorValue,
+      decreasedColorValue: _settings.decreasedColorValue,
+      unchangedColorValue: _settings.unchangedColorValue,
       xMin: _settings.xMin,
       xMax: _settings.xMax,
       yMin: _settings.yMin,
@@ -235,6 +286,9 @@ class PlotSettingsProvider extends ChangeNotifier {
       showGridlines: _settings.showGridlines,
       showLabels: _settings.showLabels,
       showLegend: _settings.showLegend,
+      increasedColorValue: _settings.increasedColorValue,
+      decreasedColorValue: _settings.decreasedColorValue,
+      unchangedColorValue: _settings.unchangedColorValue,
       xMin: _settings.xMin,
       xMax: _settings.xMax,
       yMin: _settings.yMin,

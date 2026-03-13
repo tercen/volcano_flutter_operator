@@ -150,7 +150,7 @@ class VolcanoApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => PlotSettingsProvider()),
+        ChangeNotifierProvider(create: (_) => PlotSettingsProvider()..loadColorPreferences()),
         ChangeNotifierProvider(create: (_) => VolcanoDataProvider()),
       ],
       child: Consumer<ThemeProvider>(

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'enums.dart';
 
 /// Holds all configurable settings for the volcano plot
@@ -20,6 +21,11 @@ class PlotSettings {
   final bool showGridlines;
   final bool showLabels;
   final bool showLegend;
+
+  // Custom plot colors (stored as ARGB int values)
+  final int increasedColorValue;
+  final int decreasedColorValue;
+  final int unchangedColorValue;
 
   // Axes
   final double? xMin;
@@ -60,6 +66,9 @@ class PlotSettings {
     this.showGridlines = false,
     this.showLabels = true,
     this.showLegend = true,
+    this.increasedColorValue = 0xFFD32F2F,  // red
+    this.decreasedColorValue = 0xFF388E3C,  // green
+    this.unchangedColorValue = 0xFF6B7280,  // grey
     this.xMin,
     this.xMax,
     this.yMin,
@@ -78,6 +87,16 @@ class PlotSettings {
     this.exportHeight = 600,
     this.isPanelCollapsed = false,
   });
+
+  // Color convenience getters
+  Color get increasedColor => Color(increasedColorValue);
+  Color get decreasedColor => Color(decreasedColorValue);
+  Color get unchangedColor => Color(unchangedColorValue);
+
+  // Default color constants
+  static const int defaultIncreasedColor = 0xFFD32F2F;  // red
+  static const int defaultDecreasedColor = 0xFF388E3C;  // green
+  static const int defaultUnchangedColor = 0xFF6B7280;  // grey
 
   /// Default title placeholder text
   static const String defaultTitlePlaceholder = 'Click to add title';
@@ -123,6 +142,9 @@ class PlotSettings {
     bool? showGridlines,
     bool? showLabels,
     bool? showLegend,
+    int? increasedColorValue,
+    int? decreasedColorValue,
+    int? unchangedColorValue,
     double? xMin,
     double? xMax,
     double? yMin,
@@ -155,6 +177,9 @@ class PlotSettings {
       showGridlines: showGridlines ?? this.showGridlines,
       showLabels: showLabels ?? this.showLabels,
       showLegend: showLegend ?? this.showLegend,
+      increasedColorValue: increasedColorValue ?? this.increasedColorValue,
+      decreasedColorValue: decreasedColorValue ?? this.decreasedColorValue,
+      unchangedColorValue: unchangedColorValue ?? this.unchangedColorValue,
       xMin: xMin,
       xMax: xMax,
       yMin: yMin,
@@ -186,6 +211,9 @@ class PlotSettings {
       showLegend: true,
       showXAxisLabel: true,
       showYAxisLabel: true,
+      increasedColorValue: defaultIncreasedColor,
+      decreasedColorValue: defaultDecreasedColor,
+      unchangedColorValue: defaultUnchangedColor,
     );
   }
 

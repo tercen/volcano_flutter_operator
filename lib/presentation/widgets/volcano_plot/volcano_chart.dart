@@ -300,17 +300,17 @@ class _VolcanoChartState extends State<VolcanoChart> {
       // Filter affects coloring: non-matching significant points show as grey
       final effectiveStatus = _getEffectiveStatus(status, settings.highlightFilter);
 
-      // Determine color based on effective status
+      // Determine color based on effective status (using custom colors from settings)
       Color color;
       switch (effectiveStatus) {
         case ChangeStatus.increased:
-          color = isDark ? AppColorsDark.increased : AppColors.increased;
+          color = settings.increasedColor;
           break;
         case ChangeStatus.decreased:
-          color = isDark ? AppColorsDark.decreased : AppColors.decreased;
+          color = settings.decreasedColor;
           break;
         case ChangeStatus.unchanged:
-          color = isDark ? AppColorsDark.unchanged : AppColors.unchanged;
+          color = settings.unchangedColor;
           break;
       }
 
@@ -759,9 +759,10 @@ class _VolcanoChartState extends State<VolcanoChart> {
     PlotSettingsProvider settingsProvider,
     bool isDark,
   ) {
-    final unchangedColor = isDark ? AppColorsDark.unchanged : AppColors.unchanged;
-    final increasedColor = isDark ? AppColorsDark.increased : AppColors.increased;
-    final decreasedColor = isDark ? AppColorsDark.decreased : AppColors.decreased;
+    final settings = settingsProvider.settings;
+    final unchangedColor = settings.unchangedColor;
+    final increasedColor = settings.increasedColor;
+    final decreasedColor = settings.decreasedColor;
     final textColor = isDark ? Colors.white : Colors.black;
     final filter = settingsProvider.settings.highlightFilter;
 

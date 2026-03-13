@@ -7,6 +7,27 @@ import '../common/section_header.dart';
 import '../common/labeled_slider.dart';
 import '../common/labeled_checkbox.dart';
 
+/// Predefined color palette for the color picker
+const _colorPresets = <Color>[
+  Color(0xFFD32F2F), // red
+  Color(0xFFE53935), // red lighter
+  Color(0xFFC62828), // red darker
+  Color(0xFFFF5722), // deep orange
+  Color(0xFFFF9800), // orange
+  Color(0xFF388E3C), // green
+  Color(0xFF4CAF50), // green lighter
+  Color(0xFF2E7D32), // green darker
+  Color(0xFF00897B), // teal
+  Color(0xFF1E40AF), // blue
+  Color(0xFF2563EB), // blue lighter
+  Color(0xFF1565C0), // blue darker
+  Color(0xFF7B1FA2), // purple
+  Color(0xFF6B7280), // grey
+  Color(0xFF9E9E9E), // grey lighter
+  Color(0xFF424242), // grey darker
+  Color(0xFF000000), // black
+];
+
 /// Appearance section with point size, opacity, text scale, etc.
 class AppearanceSection extends StatefulWidget {
   const AppearanceSection({super.key});
@@ -98,8 +119,37 @@ class _AppearanceSectionState extends State<AppearanceSection> {
           onChanged: settingsProvider.setTextScale,
           valueFormatter: (v) => '${(v * 100).round()}%',
         ),
+        const SizedBox(height: AppSpacing.md),
+        // Plot Colors sub-section
+        Text(
+          'Plot Colors',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         const SizedBox(height: AppSpacing.sm),
-        // Reset button (resets sliders above)
+        _buildColorRow(
+          label: 'Increased',
+          color: Color(settings.increasedColorValue),
+          onColorChanged: (color) =>
+              settingsProvider.setIncreasedColor(color.toARGB32()),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        _buildColorRow(
+          label: 'Decreased',
+          color: Color(settings.decreasedColorValue),
+          onColorChanged: (color) =>
+              settingsProvider.setDecreasedColor(color.toARGB32()),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        _buildColorRow(
+          label: 'Unchanged',
+          color: Color(settings.unchangedColorValue),
+          onColorChanged: (color) =>
+              settingsProvider.setUnchangedColor(color.toARGB32()),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Reset button (resets sliders and colors above)
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -230,6 +280,199 @@ class _AppearanceSectionState extends State<AppearanceSection> {
               onChanged: onChanged,
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildColorRow({
+    required String label,
+    required Color color,
+    required ValueChanged<Color> onColorChanged,
+  }) {
+    final theme = Theme.of(context);
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 64,
+          child: Text(
+            label,
+            style: theme.textTheme.bodySmall,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        GestureDetector(
+          onTap: () => _showColorPickerDialog(color, onColorChanged),
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade400, width: 1),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        // Show hex value
+        Text(
+          '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontFamily: 'monospace',
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showColorPickerDialog(Color currentColor, ValueChanged<Color> onColorChanged) {
+    showDialog(
+      context: context,
+      builder: (context) => _ColorPickerDialog(
+        currentColor: currentColor,
+        presets: _colorPresets,
+        onColorSelected: onColorChanged,
+      ),
+    );
+  }
+}
+
+/// Simple color picker dialog with preset swatches and hex input
+class _ColorPickerDialog extends StatefulWidget {
+  final Color currentColor;
+  final List<Color> presets;
+  final ValueChanged<Color> onColorSelected;
+
+  const _ColorPickerDialog({
+    required this.currentColor,
+    required this.presets,
+    required this.onColorSelected,
+  });
+
+  @override
+  State<_ColorPickerDialog> createState() => _ColorPickerDialogState();
+}
+
+class _ColorPickerDialogState extends State<_ColorPickerDialog> {
+  late Color _selected;
+  late TextEditingController _hexController;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentColor;
+    _hexController = TextEditingController(
+      text: _colorToHex(_selected),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hexController.dispose();
+    super.dispose();
+  }
+
+  String _colorToHex(Color color) {
+    return color.toARGB32().toRadixString(16).substring(2).toUpperCase();
+  }
+
+  Color? _hexToColor(String hex) {
+    hex = hex.replaceAll('#', '').trim();
+    if (hex.length == 6) {
+      final value = int.tryParse('FF$hex', radix: 16);
+      if (value != null) return Color(value);
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Choose Color'),
+      content: SizedBox(
+        width: 280,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Preview
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _selected,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _hexController,
+                    decoration: const InputDecoration(
+                      prefixText: '#',
+                      labelText: 'Hex color',
+                      isDense: true,
+                    ),
+                    onChanged: (value) {
+                      final color = _hexToColor(value);
+                      if (color != null) {
+                        setState(() => _selected = color);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Preset swatches
+            const Text('Presets', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: widget.presets.map((color) {
+                final isSelected = color.toARGB32() == _selected.toARGB32();
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selected = color;
+                      _hexController.text = _colorToHex(color);
+                    });
+                  },
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? Colors.black : Colors.grey.shade300,
+                        width: isSelected ? 2.5 : 1,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            widget.onColorSelected(_selected);
+            Navigator.of(context).pop();
+          },
+          child: const Text('Apply'),
         ),
       ],
     );
