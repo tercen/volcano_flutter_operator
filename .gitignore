@@ -47,6 +47,7 @@ app.*.map.json
 
 # Local development files
 _local/
+.claude/
 
 # Flutter plugins
 .flutter-plugins
