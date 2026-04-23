@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_colors_dark.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../domain/models/enums.dart';
 import '../../providers/plot_settings_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../common/section_header.dart';
@@ -28,12 +29,38 @@ class ExportSection extends StatefulWidget {
 class _ExportSectionState extends State<ExportSection> {
   final TextEditingController _widthController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
+  final FocusNode _widthFocus = FocusNode();
+  final FocusNode _heightFocus = FocusNode();
+  ExportUnit? _lastSyncedUnit;
 
   @override
   void dispose() {
     _widthController.dispose();
     _heightController.dispose();
+    _widthFocus.dispose();
+    _heightFocus.dispose();
     super.dispose();
+  }
+
+  String _formatForUnit(int pixels, ExportUnit unit) {
+    switch (unit) {
+      case ExportUnit.px:
+        return pixels.toString();
+      case ExportUnit.cm:
+        return (pixels * 2.54 / exportDpi).toStringAsFixed(1);
+    }
+  }
+
+  int? _parseForUnit(String text, ExportUnit unit) {
+    switch (unit) {
+      case ExportUnit.px:
+        final v = int.tryParse(text.trim());
+        return (v != null && v > 0) ? v : null;
+      case ExportUnit.cm:
+        final v = double.tryParse(text.trim().replaceAll(',', '.'));
+        if (v == null || v <= 0) return null;
+        return (v * exportDpi / 2.54).round();
+    }
   }
 
   @override
@@ -47,13 +74,24 @@ class _ExportSectionState extends State<ExportSection> {
     final buttonForeground = isDark ? Colors.white : AppColors.primary;
     final buttonBorder = isDark ? AppColorsDark.primary : AppColors.primary;
 
-    // Sync controllers
-    if (_widthController.text != settings.exportWidth.toString()) {
-      _widthController.text = settings.exportWidth.toString();
+    final unit = settings.exportUnit;
+    final unitChanged = _lastSyncedUnit != unit;
+
+    // Sync controllers. Skip if the field is focused (user typing), unless
+    // the unit just changed, in which case we must re-render the value.
+    final expectedWidth = _formatForUnit(settings.exportWidth, unit);
+    final expectedHeight = _formatForUnit(settings.exportHeight, unit);
+    if (unitChanged || !_widthFocus.hasFocus) {
+      if (_widthController.text != expectedWidth) {
+        _widthController.text = expectedWidth;
+      }
     }
-    if (_heightController.text != settings.exportHeight.toString()) {
-      _heightController.text = settings.exportHeight.toString();
+    if (unitChanged || !_heightFocus.hasFocus) {
+      if (_heightController.text != expectedHeight) {
+        _heightController.text = expectedHeight;
+      }
     }
+    _lastSyncedUnit = unit;
 
     // Custom button style: white text/icon, violet border in dark mode
     final buttonStyle = OutlinedButton.styleFrom(
@@ -88,19 +126,51 @@ class _ExportSectionState extends State<ExportSection> {
           ],
         ),
         const SizedBox(height: AppSpacing.controlSpacing),
-        // Dimensions
-        Text('Dimensions (px)', style: theme.textTheme.bodySmall),
+        // Unit toggle + dimensions label on one row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Dimensions (${unit.displayName})',
+              style: theme.textTheme.bodySmall,
+            ),
+            SizedBox(
+              height: 28,
+              child: SegmentedButton<ExportUnit>(
+                style: SegmentedButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  textStyle: theme.textTheme.bodySmall,
+                ),
+                segments: const [
+                  ButtonSegment(
+                    value: ExportUnit.cm,
+                    label: Text('cm'),
+                  ),
+                  ButtonSegment(
+                    value: ExportUnit.px,
+                    label: Text('px'),
+                  ),
+                ],
+                selected: {unit},
+                showSelectedIcon: false,
+                onSelectionChanged: (s) => settingsProvider.setExportUnit(s.first),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: AppSpacing.xs),
         Row(
           children: [
             Expanded(
               child: _buildDimensionField(
                 controller: _widthController,
+                focusNode: _widthFocus,
                 label: 'W',
-                onChanged: (v) {
-                  if (v != null && v > 0) {
-                    settingsProvider.setExportWidth(v);
-                  }
+                unit: unit,
+                onChanged: (px) {
+                  if (px != null) settingsProvider.setExportWidth(px);
                 },
               ),
             ),
@@ -108,11 +178,11 @@ class _ExportSectionState extends State<ExportSection> {
             Expanded(
               child: _buildDimensionField(
                 controller: _heightController,
+                focusNode: _heightFocus,
                 label: 'H',
-                onChanged: (v) {
-                  if (v != null && v > 0) {
-                    settingsProvider.setExportHeight(v);
-                  }
+                unit: unit,
+                onChanged: (px) {
+                  if (px != null) settingsProvider.setExportHeight(px);
                 },
               ),
             ),
@@ -124,7 +194,9 @@ class _ExportSectionState extends State<ExportSection> {
 
   Widget _buildDimensionField({
     required TextEditingController controller,
+    required FocusNode focusNode,
     required String label,
+    required ExportUnit unit,
     required ValueChanged<int?> onChanged,
   }) {
     final theme = Theme.of(context);
@@ -133,7 +205,10 @@ class _ExportSectionState extends State<ExportSection> {
       height: 36,
       child: TextField(
         controller: controller,
-        keyboardType: TextInputType.number,
+        focusNode: focusNode,
+        keyboardType: TextInputType.numberWithOptions(
+          decimal: unit == ExportUnit.cm,
+        ),
         decoration: InputDecoration(
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(
@@ -146,8 +221,7 @@ class _ExportSectionState extends State<ExportSection> {
           ),
         ),
         onChanged: (value) {
-          final parsed = int.tryParse(value);
-          onChanged(parsed);
+          onChanged(_parseForUnit(value, unit));
         },
       ),
     );

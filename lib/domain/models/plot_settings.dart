@@ -48,6 +48,7 @@ class PlotSettings {
   // Export
   final int exportWidth;
   final int exportHeight;
+  final ExportUnit exportUnit;
 
   // Panel state
   final bool isPanelCollapsed;
@@ -67,7 +68,7 @@ class PlotSettings {
     this.showLabels = true,
     this.showLegend = true,
     this.increasedColorValue = 0xFFD32F2F,  // red
-    this.decreasedColorValue = 0xFF388E3C,  // green
+    this.decreasedColorValue = 0xFF1976D2,  // blue
     this.unchangedColorValue = 0xFF6B7280,  // grey
     this.xMin,
     this.xMax,
@@ -83,8 +84,9 @@ class PlotSettings {
     this.yAxisLabelEdited = false,
     this.showXAxisLabel = true,
     this.showYAxisLabel = true,
-    this.exportWidth = 750,
-    this.exportHeight = 600,
+    this.exportWidth = 2000,
+    this.exportHeight = 2000,
+    this.exportUnit = ExportUnit.cm,
     this.isPanelCollapsed = false,
   });
 
@@ -95,7 +97,7 @@ class PlotSettings {
 
   // Default color constants
   static const int defaultIncreasedColor = 0xFFD32F2F;  // red
-  static const int defaultDecreasedColor = 0xFF388E3C;  // green
+  static const int defaultDecreasedColor = 0xFF1976D2;  // blue
   static const int defaultUnchangedColor = 0xFF6B7280;  // grey
 
   /// Default title placeholder text
@@ -161,6 +163,7 @@ class PlotSettings {
     bool? showYAxisLabel,
     int? exportWidth,
     int? exportHeight,
+    ExportUnit? exportUnit,
     bool? isPanelCollapsed,
   }) {
     return PlotSettings(
@@ -196,6 +199,7 @@ class PlotSettings {
       showYAxisLabel: showYAxisLabel ?? this.showYAxisLabel,
       exportWidth: exportWidth ?? this.exportWidth,
       exportHeight: exportHeight ?? this.exportHeight,
+      exportUnit: exportUnit ?? this.exportUnit,
       isPanelCollapsed: isPanelCollapsed ?? this.isPanelCollapsed,
     );
   }

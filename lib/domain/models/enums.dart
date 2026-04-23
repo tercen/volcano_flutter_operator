@@ -37,6 +37,24 @@ enum HighlightFilter {
   }
 }
 
+/// Unit used for displaying/editing export dimensions
+enum ExportUnit {
+  px,
+  cm;
+
+  String get displayName {
+    switch (this) {
+      case ExportUnit.px:
+        return 'px';
+      case ExportUnit.cm:
+        return 'cm';
+    }
+  }
+}
+
+/// DPI used to convert between pixels and centimetres for export dimensions
+const double exportDpi = 300.0;
+
 /// Ranking criterion for top hits
 enum RankingCriterion {
   manhattan,

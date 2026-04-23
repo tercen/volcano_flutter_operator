@@ -9,17 +9,25 @@ class PlotSettingsProvider extends ChangeNotifier {
 
   PlotSettings get settings => _settings;
 
-  /// Load persisted color preferences from localStorage
+  /// Load persisted preferences (colors, export unit) from localStorage
   Future<void> loadColorPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final inc = prefs.getInt('color_increased');
     final dec = prefs.getInt('color_decreased');
     final unc = prefs.getInt('color_unchanged');
-    if (inc != null || dec != null || unc != null) {
+    final unitName = prefs.getString('export_unit');
+    final unit = unitName == null
+        ? null
+        : ExportUnit.values.firstWhere(
+            (u) => u.name == unitName,
+            orElse: () => _settings.exportUnit,
+          );
+    if (inc != null || dec != null || unc != null || unit != null) {
       _settings = _settings.copyWith(
         increasedColorValue: inc,
         decreasedColorValue: dec,
         unchangedColorValue: unc,
+        exportUnit: unit,
       );
       notifyListeners();
     }
@@ -31,6 +39,12 @@ class PlotSettingsProvider extends ChangeNotifier {
     await prefs.setInt('color_increased', _settings.increasedColorValue);
     await prefs.setInt('color_decreased', _settings.decreasedColorValue);
     await prefs.setInt('color_unchanged', _settings.unchangedColorValue);
+  }
+
+  /// Save export unit preference to localStorage
+  Future<void> _saveExportUnit() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('export_unit', _settings.exportUnit.name);
   }
 
   // Threshold controls
@@ -227,6 +241,7 @@ class PlotSettingsProvider extends ChangeNotifier {
       showYAxisLabel: _settings.showYAxisLabel,
       exportWidth: _settings.exportWidth,
       exportHeight: _settings.exportHeight,
+      exportUnit: _settings.exportUnit,
       isPanelCollapsed: _settings.isPanelCollapsed,
     );
     notifyListeners();
@@ -266,6 +281,7 @@ class PlotSettingsProvider extends ChangeNotifier {
       showYAxisLabel: _settings.showYAxisLabel,
       exportWidth: _settings.exportWidth,
       exportHeight: _settings.exportHeight,
+      exportUnit: _settings.exportUnit,
       isPanelCollapsed: _settings.isPanelCollapsed,
     );
     notifyListeners();
@@ -305,6 +321,7 @@ class PlotSettingsProvider extends ChangeNotifier {
       showYAxisLabel: _settings.showYAxisLabel,
       exportWidth: _settings.exportWidth,
       exportHeight: _settings.exportHeight,
+      exportUnit: _settings.exportUnit,
       isPanelCollapsed: _settings.isPanelCollapsed,
     );
     notifyListeners();
@@ -328,6 +345,13 @@ class PlotSettingsProvider extends ChangeNotifier {
 
   void setExportHeight(int value) {
     _settings = _settings.copyWith(exportHeight: value);
+    notifyListeners();
+  }
+
+  void setExportUnit(ExportUnit unit) {
+    if (_settings.exportUnit == unit) return;
+    _settings = _settings.copyWith(exportUnit: unit);
+    _saveExportUnit();
     notifyListeners();
   }
 
