@@ -30,8 +30,11 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
-!/build/web/     # Tercen requirement - web build must be committed
+# Tercen requirement: the web build under /build/web must be committed.
+# Pattern must un-ignore the /build/web directory itself (not /build/web/),
+# otherwise git's parent-directory rule keeps its contents ignored.
+/build/*
+!/build/web
 /coverage/
 
 # Symbolication related
